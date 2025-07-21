@@ -28,9 +28,6 @@ final List<String> ethiopianFacts = [
   'Ethiopia is the only country in the world that has a national language that is not based on the Latin alphabet.',
   'The Ethiopian flag has three colors: green, yellow, and red, which represent the three major religions in Ethiopia: Christianity, Islam, and Judaism.',
   'The Ethiopian flag is the only national flag in the world that has a star in the middle.',
-  'The Ethiopian flag is the only national flag in the world that has a star in the middle.',
-  'The Ethiopian flag is the only national flag in the world that has a star in the middle.',
-  'The Ethiopian flag is the only national flag in the world that has a star in the middle.',
   "Ethiopia has more than 80 ethnic groups, each with its own language and traditions.",
   "The Omo Valley in Ethiopia is home to some of the most culturally diverse tribes in the world.",
   "Ethiopia was one of the first countries to adopt Christianity in the 4th century AD.",
@@ -47,6 +44,44 @@ final List<String> ethiopianFacts = [
   "The traditional Ethiopian dance, Eskista, is known for its unique shoulder movements and is performed across the country.",
   "In Ethiopian culture, meals are often eaten communally from a shared plate, emphasizing unity and togetherness.",
   "The Ethiopian calendar is based on the lunar cycle, with each year consisting of 13 months, each of which has 28 days.",
+];
+
+// List of relatable emojis for each fact (same order as ethiopianFacts)
+final List<String> factEmojis = [
+  '🦁', // Independence (Lion of Judah)
+  '☕', // Coffee
+  '📅', // Calendar
+  '🔤', // Alphabet
+  '🔥', // Danakil Depression (hot)
+  '⛪', // Lalibela churches
+  '🌊', // Blue Nile
+  '🥙', // Injera
+  '🛕', // Ark of the Covenant
+  '🦴', // Lucy fossil
+  '⛰️', // Roof of Africa
+  '🏙️', // Addis Ababa
+  '🏃‍♂️', // Abebe Bikila
+  '🎉', // New Year
+  '⏰', // Time system
+  '🔡', // Non-Latin alphabet
+  '🇪🇹', // Flag colors
+  '⭐', // Flag star
+  '🌍', // Ethnic groups
+  '👥', // Omo Valley tribes
+  '✝️', // Christianity
+  '🦁', // Rastafarian/Haile Selassie
+  '🌾', // Teff
+  '🐒', // Simien Mountains animals
+  '🎷', // Ethio-jazz
+  '☕', // Coffee ceremony
+  '🍗', // Doro Wat
+  '⛪', // Lake Tana monasteries
+  '☕', // Sidama coffee
+  '🛰️', // Satellite
+  '💦', // Timket/river
+  '💃', // Eskista dance
+  '🤝', // Communal meal
+  '📅', // Calendar 13 months
 ];
 
 class MyApp extends StatelessWidget {
@@ -137,20 +172,41 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with SingleTickerProviderStateMixin {
   String _currentFact = 'Press the button to generate a fun fact!';
   bool _isLoading = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
+
+  // Add animation controller for scaling the card
+  late AnimationController _scaleController;
+  late Animation<double> _scaleAnimation;
+
+  // Track the current emoji index
+  int? _currentEmojiIndex;
 
   @override
   void initState() {
     super.initState();
     _audioPlayer.setSource(AssetSource('audio/coffee_pour.mp3'));
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+      lowerBound: 0.96,
+      upperBound: 1.0,
+    );
+    _scaleAnimation = CurvedAnimation(
+      parent: _scaleController,
+      curve: Curves.elasticOut,
+    );
+    _scaleController.value = 1.0;
+    _currentEmojiIndex = null;
   }
 
   @override
   void dispose() {
     _audioPlayer.dispose();
+    _scaleController.dispose();
     super.dispose();
   }
 
@@ -162,24 +218,27 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      // Generate a random index
       final random = Random();
       final factIndex = random.nextInt(ethiopianFacts.length);
 
-      // Play the coffee pouring sound
       await _audioPlayer.seek(Duration.zero);
       await _audioPlayer.resume();
 
-      // Get a random Ethiopian fact
+      // Animate scale down then up for card
+      await _scaleController.reverse(from: 1.0);
       setState(() {
         _currentFact = ethiopianFacts[factIndex];
+        _currentEmojiIndex = factIndex;
         _isLoading = false;
       });
+      await _scaleController.forward();
     } catch (e) {
       setState(() {
         _currentFact = 'Error: Something went wrong. Please try again.';
+        _currentEmojiIndex = null;
         _isLoading = false;
       });
+      await _scaleController.forward();
     }
   }
 
@@ -212,62 +271,100 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Card(
-                    elevation: 8,
-                    shadowColor:
-                        Theme.of(context).colorScheme.primary.withOpacity(0.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      side: BorderSide(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.3),
-                        width: 2,
-                      ),
+                  // Animated emoji above the card
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 500),
+                    transitionBuilder:
+                        (Widget child, Animation<double> animation) {
+                      return ScaleTransition(
+                          scale: animation,
+                          child:
+                              FadeTransition(opacity: animation, child: child));
+                    },
+                    child: Text(
+                      _currentEmojiIndex != null &&
+                              _currentEmojiIndex! < factEmojis.length
+                          ? factEmojis[_currentEmojiIndex!]
+                          : '🎲',
+                      key: ValueKey<int?>(_currentEmojiIndex),
+                      style: const TextStyle(fontSize: 64, shadows: [
+                        Shadow(
+                            blurRadius: 8,
+                            color: Colors.black26,
+                            offset: Offset(0, 4))
+                      ]),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          padding: const EdgeInsets.all(32.0),
-                          constraints: const BoxConstraints(
-                            minHeight: 200,
-                            maxWidth: 600,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(24),
-                            color: Theme.of(context)
-                                .colorScheme
-                                .surface
-                                .withOpacity(0.8),
-                          ),
-                          child: Center(
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 500),
-                              transitionBuilder:
-                                  (Widget child, Animation<double> animation) {
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: child,
-                                );
-                              },
-                              child: Text(
-                                _currentFact,
-                                key: ValueKey<String>(_currentFact),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium
-                                    ?.copyWith(
-                                      fontSize: 22,
-                                      height: 1.5,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .onSurface,
+                  ),
+                  // Card with animated scale and animated fact
+                  ScaleTransition(
+                    scale: _scaleAnimation,
+                    child: Card(
+                      elevation: 8,
+                      shadowColor: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        side: BorderSide(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding: const EdgeInsets.all(32.0),
+                            constraints: const BoxConstraints(
+                              minHeight: 200,
+                              maxWidth: 600,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(24),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surface
+                                  .withOpacity(0.8),
+                            ),
+                            child: Center(
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 500),
+                                transitionBuilder: (Widget child,
+                                    Animation<double> animation) {
+                                  // Combine slide and fade
+                                  final inAnimation = Tween<Offset>(
+                                    begin: const Offset(0.0, 0.2),
+                                    end: Offset.zero,
+                                  ).animate(animation);
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: SlideTransition(
+                                      position: inAnimation,
+                                      child: child,
                                     ),
-                                textAlign: TextAlign.center,
+                                  );
+                                },
+                                child: Text(
+                                  _currentFact,
+                                  key: ValueKey<String>(_currentFact),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineMedium
+                                      ?.copyWith(
+                                        fontSize: 22,
+                                        height: 1.5,
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                      ),
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ),
                           ),
