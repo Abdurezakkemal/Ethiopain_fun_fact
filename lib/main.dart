@@ -245,16 +245,23 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        title: Text(
-          '🇪🇹 Ethiopian Fun Fact',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(80),
+        child: ClipPath(
+          clipper: AppBarBottomClipper(),
+          child: AppBar(
+            backgroundColor: Theme.of(context).colorScheme.primary,
+            title: Text(
+              '🇪🇹 Ethiopian Fun Fact',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onPrimary,
+                  ),
+            ),
+            centerTitle: true,
+            elevation: 0,
+            toolbarHeight: 80,
+          ),
         ),
-        centerTitle: true,
-        elevation: 0,
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -263,207 +270,251 @@ class _HomePageState extends State<HomePage>
             fit: BoxFit.cover,
           ),
         ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Animated emoji above the card
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 500),
-                    transitionBuilder:
-                        (Widget child, Animation<double> animation) {
-                      return ScaleTransition(
-                          scale: animation,
-                          child:
-                              FadeTransition(opacity: animation, child: child));
-                    },
-                    child: Text(
-                      _currentEmojiIndex != null &&
-                              _currentEmojiIndex! < factEmojis.length
-                          ? factEmojis[_currentEmojiIndex!]
-                          : '🎲',
-                      key: ValueKey<int?>(_currentEmojiIndex),
-                      style: const TextStyle(fontSize: 64, shadows: [
-                        Shadow(
-                            blurRadius: 8,
-                            color: Colors.black26,
-                            offset: Offset(0, 4))
-                      ]),
-                    ),
+        child: Stack(
+          children: [
+            // Circular gradient overlay for background
+            Center(
+              child: Container(
+                width: 500,
+                height: 500,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.25),
+                      Colors.transparent,
+                    ],
+                    radius: 0.8,
                   ),
-                  // Card with animated scale and animated fact
-                  ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: Card(
-                      elevation: 8,
-                      shadowColor: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.5),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
-                        side: BorderSide(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.3),
-                          width: 2,
+                ),
+              ),
+            ),
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0, vertical: 16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Animated emoji above the card
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 500),
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                          return ScaleTransition(
+                            scale: animation,
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: Text(
+                          _currentEmojiIndex != null &&
+                                  _currentEmojiIndex! < factEmojis.length
+                              ? factEmojis[_currentEmojiIndex!]
+                              : '🎲',
+                          key: ValueKey<int?>(_currentEmojiIndex),
+                          style: const TextStyle(fontSize: 64, shadows: [
+                            Shadow(
+                                blurRadius: 8,
+                                color: Colors.black26,
+                                offset: Offset(0, 4))
+                          ]),
                         ),
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            padding: const EdgeInsets.all(32.0),
-                            constraints: const BoxConstraints(
-                              minHeight: 200,
-                              maxWidth: 600,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(24),
+                      // Card with animated scale and animated fact
+                      ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: Card(
+                          elevation: 8,
+                          shadowColor: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.5),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            side: BorderSide(
                               color: Theme.of(context)
                                   .colorScheme
-                                  .surface
-                                  .withOpacity(0.8),
+                                  .primary
+                                  .withOpacity(0.3),
+                              width: 2,
                             ),
-                            child: Center(
-                              child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 500),
-                                transitionBuilder: (Widget child,
-                                    Animation<double> animation) {
-                                  // Combine slide and fade
-                                  final inAnimation = Tween<Offset>(
-                                    begin: const Offset(0.0, 0.2),
-                                    end: Offset.zero,
-                                  ).animate(animation);
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: SlideTransition(
-                                      position: inAnimation,
-                                      child: child,
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(24),
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                padding: const EdgeInsets.all(32.0),
+                                constraints: const BoxConstraints(
+                                  minHeight: 200,
+                                  maxWidth: 600,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(24),
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surface
+                                      .withOpacity(0.8),
+                                ),
+                                child: Center(
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 500),
+                                    transitionBuilder: (Widget child,
+                                        Animation<double> animation) {
+                                      // Combine slide and fade
+                                      final inAnimation = Tween<Offset>(
+                                        begin: const Offset(0.0, 0.2),
+                                        end: Offset.zero,
+                                      ).animate(animation);
+                                      return FadeTransition(
+                                        opacity: animation,
+                                        child: SlideTransition(
+                                          position: inAnimation,
+                                          child: child,
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      _currentFact,
+                                      key: ValueKey<String>(_currentFact),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .headlineMedium
+                                          ?.copyWith(
+                                            fontSize: 22,
+                                            height: 1.5,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onSurface,
+                                          ),
+                                      textAlign: TextAlign.center,
                                     ),
-                                  );
-                                },
-                                child: Text(
-                                  _currentFact,
-                                  key: ValueKey<String>(_currentFact),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .headlineMedium
-                                      ?.copyWith(
-                                        fontSize: 22,
-                                        height: 1.5,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface,
-                                      ),
-                                  textAlign: TextAlign.center,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withOpacity(0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      transform: Matrix4.identity()
-                        ..scale(_isLoading ? 0.95 : 1.0),
-                      child: Container(
+                      const SizedBox(height: 40),
+                      Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(30),
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              Theme.of(context).colorScheme.primary,
-                              Theme.of(context)
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context)
                                   .colorScheme
                                   .primary
-                                  .withOpacity(0.8),
-                            ],
-                          ),
-                        ),
-                        child: ElevatedButton.icon(
-                          onPressed: _isLoading ? null : _generateNewFact,
-                          icon: _isLoading
-                              ? SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        Theme.of(context)
-                                            .colorScheme
-                                            .onPrimary),
-                                  ),
-                                )
-                              : const Icon(Icons.auto_awesome, size: 24),
-                          label: Text(
-                            _isLoading ? 'Loading...' : '☕ Get Fun Fact',
-                            style: GoogleFonts.notoSansEthiopic(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                              color: Theme.of(context).colorScheme.onPrimary,
+                                  .withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
-                          ),
-                          style: ButtonStyle(
-                            backgroundColor:
-                                MaterialStateProperty.resolveWith<Color>(
-                              (Set<MaterialState> states) {
-                                if (states.contains(MaterialState.disabled)) {
-                                  return Theme.of(context)
+                          ],
+                        ),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          transform: Matrix4.identity()
+                            ..scale(_isLoading ? 0.95 : 1.0),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(30),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Theme.of(context).colorScheme.primary,
+                                  Theme.of(context)
                                       .colorScheme
                                       .primary
-                                      .withOpacity(0.6);
-                                }
-                                return Colors.transparent;
-                              },
-                            ),
-                            padding: MaterialStateProperty.all(
-                              const EdgeInsets.symmetric(
-                                  horizontal: 32, vertical: 16),
-                            ),
-                            shape: MaterialStateProperty.all(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
+                                      .withOpacity(0.8),
+                                ],
                               ),
                             ),
-                            elevation: MaterialStateProperty.all(0),
+                            child: ElevatedButton.icon(
+                              onPressed: _isLoading ? null : _generateNewFact,
+                              icon: _isLoading
+                                  ? SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Theme.of(context)
+                                                    .colorScheme
+                                                    .onPrimary),
+                                      ),
+                                    )
+                                  : const Icon(Icons.auto_awesome, size: 24),
+                              label: Text(
+                                _isLoading ? 'Loading...' : '☕ Get Fun Fact',
+                                style: GoogleFonts.notoSansEthiopic(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                              style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStateProperty.resolveWith<Color>(
+                                  (Set<MaterialState> states) {
+                                    if (states
+                                        .contains(MaterialState.disabled)) {
+                                      return Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withOpacity(0.6);
+                                    }
+                                    return Colors.transparent;
+                                  },
+                                ),
+                                padding: MaterialStateProperty.all(
+                                  const EdgeInsets.symmetric(
+                                      horizontal: 32, vertical: 16),
+                                ),
+                                shape: MaterialStateProperty.all(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                                elevation: MaterialStateProperty.all(0),
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
+}
+
+// Custom clipper for AppBar with rounded bottom
+class AppBarBottomClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - 30);
+    path.quadraticBezierTo(
+        size.width / 2, size.height + 30, size.width, size.height - 30);
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }
