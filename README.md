@@ -21,7 +21,7 @@ A beautiful Flutter app that shares random, fascinating facts about Ethiopia, wi
   <img src="generatedFun.png" width="45%" />
 </p>
 
-(Add your screenshots here!)
+
 
 ## Getting Started
 
